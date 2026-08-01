@@ -4,16 +4,22 @@ const express = require('express')
 const mongoose = require('mongoose')
 const cors = require('cors')
 
-// Create Express app
+// Import Routes
+const workoutRoutes = require('./routes/workouts')
+
+// Create Express App
 const app = express()
 
 // Middleware
 app.use(cors())
 app.use(express.json())
 
+// Routes
+app.use('/api/workouts', workoutRoutes)
+
 // Test Route
 app.get('/', (req, res) => {
-    res.json({
+    res.status(200).json({
         message: "Welcome to FitTrack API 🚀"
     })
 })
