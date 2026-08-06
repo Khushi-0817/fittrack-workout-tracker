@@ -9,6 +9,9 @@ import WorkoutCard from "../components/WorkoutCard";
 import SearchBar from "../components/SearchBar";
 
 import "../styles/Home.css";
+import WeeklyChart from "../components/WeeklyChart";
+
+import "../styles/Analytics.css";
 
 function Home() {
   const [workouts, setWorkouts] = useState([]);
@@ -69,6 +72,9 @@ function Home() {
           </section>
 
           <DashboardStats workouts={filteredWorkouts} />
+          <WeeklyChart
+workouts={filteredWorkouts}
+/>
 
           <SearchBar
             search={search}

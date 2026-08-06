@@ -1,169 +1,175 @@
-const mongoose = require('mongoose')
-const Workout = require('../models/workoutModel')
+const mongoose = require("mongoose");
+const Workout = require("../models/workoutModel");
 
-// GET all workouts
+// ======================================
+// GET ALL WORKOUTS (Current User)
+// ======================================
+
 const getWorkouts = async (req, res) => {
-    try {
-        const workouts = await Workout.find().sort({ createdAt: -1 })
-        res.status(200).json(workouts)
-    } catch (error) {
-        res.status(500).json({
-            error: error.message
-        })
-    }
-}
+  try {
+    const user_id = req.user._id;
 
-// GET single workout
+    const workouts = await Workout.find({ user_id }).sort({
+      createdAt: -1,
+    });
+
+    res.status(200).json(workouts);
+  } catch (error) {
+    res.status(500).json({
+      message: error.message,
+    });
+  }
+};
+
+// ======================================
+// GET SINGLE WORKOUT
+// ======================================
+
 const getWorkout = async (req, res) => {
+  const { id } = req.params;
 
-    const { id } = req.params
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    return res.status(404).json({
+      message: "Workout not found.",
+    });
+  }
 
-    if (!mongoose.Types.ObjectId.isValid(id)) {
-        return res.status(404).json({
-            error: 'Workout not found'
-        })
+  try {
+    const workout = await Workout.findOne({
+      _id: id,
+      user_id: req.user._id,
+    });
+
+    if (!workout) {
+      return res.status(404).json({
+        message: "Workout not found.",
+      });
     }
 
-    try {
+    res.status(200).json(workout);
+  } catch (error) {
+    res.status(500).json({
+      message: error.message,
+    });
+  }
+};
 
-        const workout = await Workout.findById(id)
+// ======================================
+// CREATE WORKOUT
+// ======================================
 
-        if (!workout) {
-            return res.status(404).json({
-                error: 'Workout not found'
-            })
-        }
-
-        res.status(200).json(workout)
-
-    } catch (error) {
-
-        res.status(500).json({
-            error: error.message
-        })
-
-    }
-
-}
-
-// CREATE workout
 const createWorkout = async (req, res) => {
-
+  try {
     const {
-        title,
-        category,
-        reps,
-        load,
-        duration,
-        calories,
-        difficulty,
-        notes
-    } = req.body
+      title,
+      category,
+      reps,
+      load,
+      duration,
+      calories,
+      difficulty,
+      notes,
+    } = req.body;
 
-    try {
+    const workout = await Workout.create({
+      user_id: req.user._id,
+      title,
+      category,
+      reps,
+      load,
+      duration,
+      calories,
+      difficulty,
+      notes,
+    });
 
-        const workout = await Workout.create({
-            title,
-            category,
-            reps,
-            load,
-            duration,
-            calories,
-            difficulty,
-            notes
-        })
+    res.status(201).json(workout);
+  } catch (error) {
+    res.status(400).json({
+      message: error.message,
+    });
+  }
+};
 
-        res.status(201).json(workout)
+// ======================================
+// DELETE WORKOUT
+// ======================================
 
-    } catch (error) {
-
-        res.status(400).json({
-            error: error.message
-        })
-
-    }
-
-}
-
-// DELETE workout
 const deleteWorkout = async (req, res) => {
+  const { id } = req.params;
 
-    const { id } = req.params
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    return res.status(404).json({
+      message: "Workout not found.",
+    });
+  }
 
-    if (!mongoose.Types.ObjectId.isValid(id)) {
-        return res.status(404).json({
-            error: 'Workout not found'
-        })
+  try {
+    const workout = await Workout.findOneAndDelete({
+      _id: id,
+      user_id: req.user._id,
+    });
+
+    if (!workout) {
+      return res.status(404).json({
+        message: "Workout not found.",
+      });
     }
 
-    try {
+    res.status(200).json(workout);
+  } catch (error) {
+    res.status(500).json({
+      message: error.message,
+    });
+  }
+};
 
-        const workout = await Workout.findByIdAndDelete(id)
+// ======================================
+// UPDATE WORKOUT
+// ======================================
 
-        if (!workout) {
-            return res.status(404).json({
-                error: 'Workout not found'
-            })
-        }
-
-        res.status(200).json(workout)
-
-    } catch (error) {
-
-        res.status(500).json({
-            error: error.message
-        })
-
-    }
-
-}
-
-// UPDATE workout
 const updateWorkout = async (req, res) => {
+  const { id } = req.params;
 
-    const { id } = req.params
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    return res.status(404).json({
+      message: "Workout not found.",
+    });
+  }
 
-    if (!mongoose.Types.ObjectId.isValid(id)) {
-        return res.status(404).json({
-            error: 'Workout not found'
-        })
+  try {
+    const workout = await Workout.findOneAndUpdate(
+      {
+        _id: id,
+        user_id: req.user._id,
+      },
+      {
+        ...req.body,
+      },
+      {
+        new: true,
+        runValidators: true,
+      }
+    );
+
+    if (!workout) {
+      return res.status(404).json({
+        message: "Workout not found.",
+      });
     }
 
-    try {
-
-        const workout = await Workout.findByIdAndUpdate(
-            id,
-            {
-                ...req.body
-            },
-            {
-                new: true,
-                runValidators: true
-            }
-        )
-
-        if (!workout) {
-            return res.status(404).json({
-                error: 'Workout not found'
-            })
-        }
-
-        res.status(200).json(workout)
-
-    } catch (error) {
-
-        res.status(400).json({
-            error: error.message
-        })
-
-    }
-
-}
+    res.status(200).json(workout);
+  } catch (error) {
+    res.status(400).json({
+      message: error.message,
+    });
+  }
+};
 
 module.exports = {
-    getWorkouts,
-    getWorkout,
-    createWorkout,
-    deleteWorkout,
-    updateWorkout
-}
+  getWorkouts,
+  getWorkout,
+  createWorkout,
+  deleteWorkout,
+  updateWorkout,
+};
